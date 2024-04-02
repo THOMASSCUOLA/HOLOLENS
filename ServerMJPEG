@@ -1,0 +1,1 @@
+.\mjpegserver.exe -a 127.0.0.1:9000 -- ffmpeg -f dshow -i video="USB Camera" -s 640x480 -framerate 30 -q 2 -frames:v 1 -f image2 -vcodec mjpeg "C:\Users\Thomas\Desktop\INFO\frame\frame.jpg"
