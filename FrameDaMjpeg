@@ -1,0 +1,138 @@
+
+Conversazione aperta. 2 messaggi. Tutti i messaggi letti.
+
+Vai ai contenuti
+Utilizzo di Posta di ITIS "P. Paleocapa" di Bergamo con gli screen reader
+Attiva notifiche desktop per Posta di ITIS "P. Paleocapa" di Bergamo.
+   OK  No, grazie
+
+5 di 1.603
+STREAMING mjpeg
+Posta in arrivo
+
+THOMAS TARTARI <tartari.thomas.studente@itispaleocapa.it>
+Allegati
+sab 30 mar, 14:01 (3 giorni fa)
+a Stefano
+
+Buon pomeriggio , ci tenevo a farle sapere che sono "riuscito" a prendere lo stream del server mjpeg e metterlo nel quad image di unity .Quasi riuscito perchè per ora non riesco a far funzionare il ciclo per farlo più di una volta .Per farlo ho modificato la linea che fa partire il server dicendo di inviare un singolo frame e metterlo in una cartella , poi su unity ho creato lo script che fa la richiesta  e prende l'immagine.Tuttavia ci ho dovuto mettere dei tempi di attesa per dargli il tempo di salvare l'immagine .
+Sono consapevole che non è il modo migliore per farlo ma per ora sono riuscito a fare così.
+Le allego lo script in caso sia curioso.
+Buona Pasqua
+Thomas Tartari
+ Un allegato
+  •  Scansione eseguita da Gmail
+
+Stefano Puddu
+sab 30 mar, 15:49 (3 giorni fa)
+a me
+
+Bene Thomas, è un passo avanti, bravo.
+Buona Pasqua anche a te!
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class MJPEGframe : MonoBehaviour
+{
+    private string imageURL = "http://127.0.0.1:9000";
+    public GameObject quadObject;
+    private string localImagePath = "C:/Users/Thomas/Desktop/INFO/frame/frame.jpg";
+
+    async void Start()
+    {
+
+        while (true)
+        {
+            await Task.Delay(2000); // Attendiamo 2 secondi
+
+            // Esegui la richiesta HTTP
+            
+           HTTPrequest();
+
+            // Attendi 3 secondi
+            await Task.Delay(3000);
+
+            // Applica la texture al materiale
+            MATERIALE();
+
+            // Attendi 1 secondo
+            await Task.Delay(1000);
+
+            // Elimina l'immagine temporanea
+            SPACAsÚTOT();
+
+           
+        }
+    }
+    private async void HTTPrequest()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            HttpResponseMessage response = await client.GetAsync(imageURL);
+            if (response.IsSuccessStatusCode)
+            {
+                Debug.Log("Richiesta HTTP inviata con successo.");
+            }
+            else
+            {
+                Debug.LogError("Errore durante l'invio della richiesta HTTP: " + response.StatusCode);
+            }
+        }
+    }
+
+    private void MATERIALE()
+    {
+        // Carica l'immagine dal percorso specificato
+        Texture2D texture = LoadTextureFromFile(localImagePath);
+
+        if (texture != null)
+        {
+            // Ottieni il renderer del Quad
+            MeshRenderer quadRenderer = quadObject.GetComponent<MeshRenderer>();
+            if (quadRenderer != null)
+            {
+                // Crea un nuovo materiale e assegna la texture
+                Material material = new Material(quadRenderer.sharedMaterial);
+                material.mainTexture = texture;
+                // Assegna il nuovo materiale al Quad
+                quadRenderer.material = material;
+            }
+            else
+            {
+                Debug.LogError("Impossibile trovare il renderer del Quad.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Impossibile trovare o caricare l'immagine: " + localImagePath);
+        }
+    }
+
+    private Texture2D LoadTextureFromFile(string path)
+    {
+        Texture2D texture = null;
+        if (File.Exists(path))
+        {
+            byte[] fileData = File.ReadAllBytes(path);
+            texture = new Texture2D(2, 2);
+            texture.LoadImage(fileData); // Carica l'immagine dal percorso specificato
+        }
+        return texture;
+    }
+
+    void SPACAsÚTOT()
+    {
+        // Elimina l'immagine temporanea alla fine
+        if (File.Exists(localImagePath))
+        {
+            File.Delete(localImagePath);
+        }
+    }
+}
+FrameJPJdaMJPEG.cs
+Visualizzazione di FrameJPJdaMJPEG.cs.
