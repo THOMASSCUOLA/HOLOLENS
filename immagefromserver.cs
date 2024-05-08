@@ -1,89 +1,106 @@
 using UnityEngine;
-using TMPro;
+using UnityEngine.Networking;
 using System;
+using System.Collections;
+using UnityEngine.UI;
+using MixedReality.Toolkit.UX;
+using MixedReality.Toolkit.Input;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Drawing;
-using static UnityEngine.Shader;
+using Unity.Profiling;
+using UnityEngine.Serialization;
+using UnityEngine.XR.Interaction.Toolkit;
 
-public class RestApiIMMAGINE : MonoBehaviour
+public class webrequest : MonoBehaviour
 {
     public GameObject imageQuad;
+    public PressableButton btn1; // Utilizzando Interactable di MRTK3
+    public PressableButton btn2; // Utilizzando Interactable di MRTK3
 
+    private string serverURL1 = "http://185.137.146.14/jpg/image.jpg";
+    private string serverURL2 = "http://129.125.136.20/jpg/image.jpg";
+    private string currentURL;
+
+    private bool isRequesting = false;
+    private float intervallo = 0.1f;
+    private float timer = 0f;
 
     void Start()
     {
-        //bool boolean = true;
-        ////while (boolean)
-        ////{
-        //for (int i = 0; i < 10; i++) {
-        //    chiamataIMAGE();
-        //    System.Threading.Thread.Sleep(1000);
-        ////}
-        //}
-        //// DA RIFARE CON THREAD!!!
+        btn1.OnClicked.AddListener(ChangeURL1); // Aggiungendo un listener al click del pulsante MRTK3
+        btn2.OnClicked.AddListener(ChangeURL2); // Aggiungendo un listener al click del pulsante MRTK3
+        currentURL = serverURL1;
     }
-
 
     void Update()
     {
-        chiamataIMAGE();
-        System.Threading.Thread.Sleep(100);
-    }
+        timer += Time.deltaTime;
 
-    // Decodifica la stringa da base64 a una Texture2D (la stringa rappresenta un'immagine)
-    public Texture2D Decode(string input)
-    {
-        byte[] img = System.Convert.FromBase64String(input);
-        Texture2D txt = new Texture2D(1, 1);
-        txt.LoadImage(img);
-        return txt;
-    }
-
-    // Inserisce la Texture2D in un nuovo materiale
-    public Material MaterialWithTexture(Texture2D texture) {
-        Material material = new Material(Shader.Find("Standard"));
-        material.mainTexture = texture;
-        return material;
-    }
-
-    async void chiamataIMAGE()
-    {
-        try
+        if (!isRequesting && timer >= intervallo)
         {
-            // Creo un'istanza di HttpClient
-            using (HttpClient client = new HttpClient())
+            StartCoroutine(LoadImage());
+            timer = 0f;
+        }
+    }
+
+    IEnumerator LoadImage()
+    {
+        isRequesting = true;
+
+        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(currentURL))
+        {
+            www.useHttpContinue = false;
+            www.redirectLimit = 0;
+            www.chunkedTransfer = false;
+            www.certificateHandler = new BypassCertificate();
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
             {
-                // Imposto l'indirizzo del server
-                client.BaseAddress = new Uri("http://127.0.0.1:3000");
-
-                // Creo un'istanza di HttpResponseMessage
-                HttpResponseMessage response = new HttpResponseMessage();
-
-                // Eseguo la chiamata GET
-                response = await client.GetAsync("/immagine");
-
-                // Leggo il contenuto della risposta
-                string content = await response.Content.ReadAsStringAsync();
-
-                // Applica il materiale con l'immagine all'imageQuad
-                MeshRenderer quadRenderer = imageQuad.GetComponent<MeshRenderer>();
-                if (quadRenderer == null)
+                Debug.LogError("Error: " + www.error);
+            }
+            else
+            {
+                if (www.isHttpError || www.isNetworkError)
                 {
-                    Debug.LogError("Il GameObject deve avere un componente MeshRenderer.");
-                    return;
+                    Debug.LogError("HTTP request error: " + www.error);
                 }
+                else
+                {
+                    Texture2D texture = DownloadHandlerTexture.GetContent(www);
 
-                quadRenderer.material = MaterialWithTexture(Decode(content));
+                    MeshRenderer quadRenderer = imageQuad.GetComponent<MeshRenderer>();
+                    if (quadRenderer == null)
+                    {
+                        Debug.LogError("The GameObject must have a MeshRenderer component.");
+                        yield break;
+                    }
 
-
+                    Material material = new Material(Shader.Find("Standard"));
+                    material.mainTexture = texture;
+                    quadRenderer.material = material;
+                }
             }
         }
-        catch (Exception e)
+
+        isRequesting = false;
+    }
+
+    void ChangeURL1()
+    {
+        currentURL = serverURL1;
+    }
+
+    void ChangeURL2()
+    {
+        currentURL = serverURL2;
+    }
+
+    public class BypassCertificate : CertificateHandler
+    {
+        protected override bool ValidateCertificate(byte[] certificateData)
         {
-            Debug.LogError("Errore durante la chiamata API: " + e.Message);
+            return true;
         }
     }
 }
