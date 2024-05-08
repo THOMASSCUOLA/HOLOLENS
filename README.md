@@ -1,4 +1,3 @@
 # HOLOLENS
- 2 script per prendere da un server un testo e un immagine (in base64) in c#;
- 
- Server da cui viene trasmesso la stringa in  base64
+Progetto che mediante l'utilizzo di Hololens 2 ,
+rendere streaming di webcam presenti online e visualizzarne lo streaming nell'ambiente app di hololens.
