@@ -7,6 +7,8 @@ ENG:
 Project that through the use of Hololens 2,
 Take streams from online webcams and view the stream in the HoloLens app environment.
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ITA:Esempio di ciò che si vede nelle 'ambiente unity.
 
 ENG: Example of what you see in the unity environment.
